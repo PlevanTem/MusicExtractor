@@ -7,15 +7,28 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// CORS configuration - more permissive for development
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Middleware for parsing JSON
 app.use(express.json());
+
 // Serve static files from the root directory
 app.use(express.static(path.join(__dirname)));
 
-// Routes
+// Routes - add a basic test route
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'API is working' });
+});
+
+// Extraction API endpoint
 app.post('/api/extract', async (req, res) => {
     try {
+        console.log('Received extraction request:', req.body);
         const { url, platform } = req.body;
         
         if (!url || !platform) {
@@ -24,26 +37,71 @@ app.post('/api/extract', async (req, res) => {
         
         let playlistData;
         
-        switch (platform) {
-            case 'apple':
-                playlistData = await extractAppleMusicPlaylist(url);
-                break;
-            case 'netease':
-                playlistData = await extractNeteaseMusicPlaylist(url);
-                break;
-            case 'qq':
-                playlistData = await extractQQMusicPlaylist(url);
-                break;
-            default:
-                return res.status(400).json({ error: 'Unsupported platform' });
+        // For real extraction - uncomment this section and remove the mock data section
+        try {
+            console.log(`Extracting playlist for platform: ${platform}`);
+            
+            switch (platform) {
+                case 'apple':
+                    playlistData = await extractAppleMusicPlaylist(url);
+                    break;
+                case 'netease':
+                    playlistData = await extractNeteaseMusicPlaylist(url);
+                    break;
+                case 'qq':
+                    playlistData = await extractQQMusicPlaylist(url);
+                    break;
+                default:
+                    return res.status(400).json({ error: 'Unsupported platform' });
+            }
+            
+            console.log(`Successfully extracted playlist with ${playlistData.songs.length} songs`);
+            
+            // Set a flag to indicate if this is mock data (for UI feedback)
+            if (playlistData.playlistInfo && playlistData.playlistInfo.extractionStatus === 'mock_data') {
+                console.log('Note: Returning mock data as extraction failed');
+            }
+            
+            res.json(playlistData);
+        } catch (error) {
+            console.error(`Error during ${platform} extraction:`, error);
+            
+            // Fallback to mock data on error
+            console.log(`Falling back to mock data for ${platform}`);
+            playlistData = getMockData(platform);
+            
+            // Add a note that this is mock data due to extraction failure
+            playlistData.playlistInfo.note = `Mock data: ${error.message}`;
+            playlistData.playlistInfo.extractionStatus = 'mock_data';
+            
+            res.json(playlistData);
         }
-        
-        res.json(playlistData);
     } catch (error) {
-        console.error('Extraction error:', error);
+        console.error('Fatal extraction error:', error);
         res.status(500).json({ error: 'Failed to extract playlist data: ' + error.message });
     }
 });
+
+// Function to get mock data for testing
+function getMockData(platform) {
+    const platformName = platform === 'apple' ? 'Apple Music' : 
+                          platform === 'netease' ? 'Netease Music' : 'QQ Music';
+    
+    return {
+        playlistInfo: {
+            title: `${platformName} Test Playlist`,
+            creator: 'Test User',
+            songCount: 5
+        },
+        songs: [
+            { id: 1, title: 'Test Song 1', artist: 'Test Artist 1', album: 'Test Album 1', duration: '3:45' },
+            { id: 2, title: 'Test Song 2', artist: 'Test Artist 2', album: 'Test Album 2', duration: '4:12' },
+            { id: 3, title: 'Test Song 3', artist: 'Test Artist 3', album: 'Test Album 3', duration: '3:21' },
+            { id: 4, title: 'Test Song 4', artist: 'Test Artist 4', album: 'Test Album 4', duration: '2:55' },
+            { id: 5, title: 'Test Song 5', artist: 'Test Artist 5', album: 'Test Album 5', duration: '5:07' }
+        ]
+    };
+}
 
 // Apple Music extraction
 async function extractAppleMusicPlaylist(url) {
@@ -115,75 +173,150 @@ function extractAppleMusicPlaylistId(url) {
 // Netease Music extraction
 async function extractNeteaseMusicPlaylist(url) {
     try {
+        console.log('Attempting to extract Netease Music playlist from URL:', url);
+        
         // Extract the playlist ID from the URL
         const playlistId = extractNeteaseMusicPlaylistId(url);
         if (!playlistId) {
+            console.log('Invalid Netease Music playlist URL - could not extract ID');
             throw new Error('Invalid Netease Music playlist URL');
         }
         
-        // Netease Music API endpoint
-        const apiUrl = `https://music.163.com/api/playlist/detail?id=${playlistId}`;
+        console.log('Extracted Netease playlist ID:', playlistId);
         
-        // Make request to the API
-        const response = await axios.get(apiUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Referer': 'https://music.163.com/'
-            }
-        });
-        
-        const data = response.data;
-        if (!data.result || !data.result.tracks) {
-            throw new Error('No playlist data returned from Netease Music');
-        }
-        
-        const playlistInfo = {
-            title: data.result.name || 'Unknown Playlist',
-            creator: data.result.creator ? data.result.creator.nickname : 'Unknown Creator',
-            songCount: data.result.trackCount || data.result.tracks.length
-        };
-        
-        const songs = data.result.tracks.map((track, index) => {
-            return {
-                id: index + 1,
-                title: track.name,
-                artist: track.artists.map(artist => artist.name).join(', '),
-                album: track.album ? track.album.name : '',
-                duration: formatDuration(track.duration)
-            };
-        });
-        
-        return { playlistInfo, songs };
-    } catch (error) {
-        console.error('Error extracting Netease Music playlist:', error);
-        
-        // Fallback to web scraping if API fails
+        // First try with API endpoint
         try {
-            const response = await axios.get(url, {
+            // Netease Music API endpoint
+            const apiUrl = `https://music.163.com/api/playlist/detail?id=${playlistId}`;
+            console.log('Attempting API request to:', apiUrl);
+            
+            // Make request to the API with more detailed headers
+            const response = await axios.get(apiUrl, {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Referer': 'https://music.163.com/',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Origin': 'https://music.163.com',
+                    'Connection': 'keep-alive'
+                },
+                timeout: 10000 // 10 second timeout
+            });
+            
+            console.log('API response status:', response.status);
+            console.log('API response headers:', response.headers);
+            
+            // Log a sample of the response data for debugging
+            const responseData = response.data;
+            console.log('API response sample:', JSON.stringify(responseData).substring(0, 500) + '...');
+            
+            if (!responseData.result || !responseData.result.tracks) {
+                console.log('API response missing expected structure, falling back to web scraping');
+                throw new Error('No playlist data structure in API response');
+            }
+            
+            const playlistInfo = {
+                title: responseData.result.name || 'Unknown Playlist',
+                creator: responseData.result.creator ? responseData.result.creator.nickname : 'Unknown Creator',
+                songCount: responseData.result.trackCount || responseData.result.tracks.length
+            };
+            
+            const songs = responseData.result.tracks.map((track, index) => {
+                return {
+                    id: index + 1,
+                    title: track.name || 'Unknown Title',
+                    artist: track.artists ? track.artists.map(artist => artist.name).join(', ') : 'Unknown Artist',
+                    album: track.album ? track.album.name : 'Unknown Album',
+                    duration: formatDuration(track.duration || 0)
+                };
+            });
+            
+            console.log(`Successfully extracted ${songs.length} songs via API`);
+            return { playlistInfo, songs };
+            
+        } catch (apiError) {
+            // Log API error and fall back to web scraping
+            console.error('API extraction failed, error:', apiError.message);
+            console.log('Falling back to web scraping approach');
+            
+            // Construct web URL from playlist ID
+            const webUrl = `https://music.163.com/#/playlist?id=${playlistId}`;
+            console.log('Attempting web scraping from:', webUrl);
+            
+            const response = await axios.get(webUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Referer': 'https://music.163.com/',
+                    'Upgrade-Insecure-Requests': '1'
                 }
             });
             
+            console.log('Web response status:', response.status);
+            
+            // Check if the response contains iframes or redirects
+            if (response.data.includes('iframe') || response.data.includes('http-equiv="refresh"')) {
+                console.log('Web page contains frames or redirects, may need a headless browser approach');
+            }
+            
             const $ = cheerio.load(response.data);
             
-            const title = $('h2.f-ff2').text().trim() || 'Unknown Playlist';
-            const creator = $('div.user a.s-fc7').text().trim() || 'Unknown Creator';
+            // Use multiple selectors to try to find playlist title
+            const title = $('h2.f-ff2').text().trim() || 
+                          $('.f-ff2').text().trim() || 
+                          $('title').text().replace(' - 网易云音乐', '').trim() || 
+                          'Netease Music Playlist';
+                          
+            // Get creator info if available
+            const creator = $('div.user a.s-fc7').text().trim() || 
+                           $('.user a').text().trim() || 
+                           'Netease User';
             
+            console.log('Extracted playlist info via scraping:', { title, creator });
+            
+            // Try multiple selectors for song list
             const songs = [];
+            
+            // First attempt: standard list
             $('ul.f-hide li a').each((index, element) => {
                 const songTitle = $(element).text().trim();
-                
                 if (songTitle) {
                     songs.push({
                         id: index + 1,
                         title: songTitle,
-                        artist: 'Unknown Artist', // Basic scraping might not get all details
+                        artist: 'Unknown Artist',
                         album: 'Unknown Album',
                         duration: '0:00'
                     });
                 }
             });
+            
+            // Second attempt: table format
+            if (songs.length === 0) {
+                $('.m-table tbody tr').each((index, element) => {
+                    const songTitle = $(element).find('.txt a').text().trim();
+                    const artist = $(element).find('.text a').text().trim() || 'Unknown Artist';
+                    
+                    if (songTitle) {
+                        songs.push({
+                            id: index + 1,
+                            title: songTitle,
+                            artist: artist,
+                            album: 'Unknown Album',
+                            duration: '0:00'
+                        });
+                    }
+                });
+            }
+            
+            // If still no songs, use mock data as last resort
+            if (songs.length === 0) {
+                console.log('Failed to extract songs via scraping, using mock data');
+                // Use playlistId in mock data to show we at least got the ID
+                return getMockNeaseData(playlistId);
+            }
+            
+            console.log(`Successfully extracted ${songs.length} songs via web scraping`);
             
             return {
                 playlistInfo: {
@@ -193,19 +326,68 @@ async function extractNeteaseMusicPlaylist(url) {
                 },
                 songs: songs
             };
-        } catch (scrapingError) {
-            throw new Error('Failed to extract Netease Music playlist: ' + error.message);
         }
+    } catch (error) {
+        console.error('Error extracting Netease Music playlist:', error);
+        // Return mock data as a last resort
+        return getMockNeaseData();
     }
 }
 
-// Helper function to extract Netease Music playlist ID
+// Function to get mock Netease data when everything else fails
+function getMockNeaseData(playlistId = 'unknown') {
+    return {
+        playlistInfo: {
+            title: `Netease Music Playlist ${playlistId}`,
+            creator: 'Netease User',
+            songCount: 5,
+            note: 'This is mock data. The actual playlist extraction failed.',
+            extractionStatus: 'mock_data'
+        },
+        songs: [
+            { id: 1, title: 'Netease Song 1', artist: 'Netease Artist 1', album: 'Netease Album 1', duration: '3:45' },
+            { id: 2, title: 'Netease Song 2', artist: 'Netease Artist 2', album: 'Netease Album 2', duration: '4:12' },
+            { id: 3, title: 'Netease Song 3', artist: 'Netease Artist 3', album: 'Netease Album 3', duration: '3:21' },
+            { id: 4, title: 'Netease Song 4', artist: 'Netease Artist 4', album: 'Netease Album 4', duration: '2:55' },
+            { id: 5, title: 'Netease Song 5', artist: 'Netease Artist 5', album: 'Netease Album 5', duration: '5:07' }
+        ]
+    };
+}
+
+// Helper function to extract Netease Music playlist ID - update to handle more URL formats
 function extractNeteaseMusicPlaylistId(url) {
     try {
-        const regex = /playlist\?id=(\d+)/;
-        const match = url.match(regex);
-        return match ? match[1] : null;
+        // Handle multiple URL formats
+        let playlistId = null;
+        
+        // Format: https://music.163.com/#/playlist?id=123456
+        const standardRegex = /playlist\?id=(\d+)/;
+        const match = url.match(standardRegex);
+        if (match) {
+            playlistId = match[1];
+        }
+        
+        // Format: https://music.163.com/playlist/123456/share
+        if (!playlistId) {
+            const alternateRegex = /playlist\/(\d+)/;
+            const altMatch = url.match(alternateRegex);
+            if (altMatch) {
+                playlistId = altMatch[1];
+            }
+        }
+        
+        // Format: music.163.com/#/m/playlist?id=123456
+        if (!playlistId) {
+            const mobileRegex = /m\/playlist\?id=(\d+)/;
+            const mobileMatch = url.match(mobileRegex);
+            if (mobileMatch) {
+                playlistId = mobileMatch[1];
+            }
+        }
+        
+        return playlistId;
     } catch (error) {
+        console.error('Error extracting Netease playlist ID:', error);
         return null;
     }
 }
@@ -324,4 +506,5 @@ function formatDuration(milliseconds) {
 // Start server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Access the application at http://localhost:${PORT}`);
 }); 
