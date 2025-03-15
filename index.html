@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist Extractor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Playlist Extractor</h1>
+            <p>Extract song information from your favorite music platforms</p>
+        </header>
+        
+        <main>
+            <section class="input-section">
+                <form id="playlist-form">
+                    <div class="form-group">
+                        <label for="playlist-url">Playlist URL</label>
+                        <input type="url" id="playlist-url" placeholder="Paste your playlist URL here" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Platform</label>
+                        <div class="platform-selector">
+                            <input type="radio" id="apple-music" name="platform" value="apple" checked>
+                            <label for="apple-music">Apple Music</label>
+                            
+                            <input type="radio" id="netease" name="platform" value="netease">
+                            <label for="netease">Netease Music</label>
+                            
+                            <input type="radio" id="qq-music" name="platform" value="qq">
+                            <label for="qq-music">QQ Music</label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit">Extract Playlist</button>
+                </form>
+            </section>
+            
+            <section class="results-section" id="results-container" style="display: none;">
+                <div class="results-header">
+                    <h2>Playlist Information</h2>
+                    <div class="export-options">
+                        <button id="export-csv">Export CSV</button>
+                        <button id="export-txt">Export TXT</button>
+                    </div>
+                </div>
+                
+                <div class="playlist-info">
+                    <h3 id="playlist-title">Playlist Title</h3>
+                    <p id="playlist-details">0 songs • Created by Unknown</p>
+                </div>
+                
+                <div class="songs-container">
+                    <table id="songs-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Artist</th>
+                                <th>Album</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody id="songs-list">
+                            <!-- Songs will be added here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="loading" class="loading-indicator" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Extracting playlist information...</p>
+                </div>
+                
+                <div id="error-message" class="error-message" style="display: none;">
+                    <p>Unable to extract playlist information. Please check the URL and try again.</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>Playlist Extractor &copy; 2023</p>
+        </footer>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html> 
