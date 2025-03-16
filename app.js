@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 连接到SSE流，接收进度更新
     function connectToProgressUpdates(requestId) {
-        progressEventSource = new EventSource(`/api/progress/${requestId}`);
+        progressEventSource = new EventSource(`/api/progress?requestId=${requestId}`);
         
         progressEventSource.onmessage = function(event) {
             try {
