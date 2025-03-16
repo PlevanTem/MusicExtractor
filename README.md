@@ -1,68 +1,68 @@
-# Playlist Information Extractor
+# 歌单信息提取器
 
-A minimalist web application that extracts song information from playlist sharing URLs from various music platforms.
+一个简约风格的网页应用，可从各大音乐平台的歌单分享链接中提取歌曲信息。
 
-## Features
+## 功能特点
 
-- **Multi-Platform Support**: Extract playlist data from Apple Music, Netease Music, and QQ Music
-- **Clean Display**: View extracted playlist information in a clean, minimalist interface
-- **Export Options**: Download playlist data in CSV or TXT format
-- **User-Friendly**: Simple interface with straightforward workflow
+- **多平台支持**：支持从网易云音乐、QQ音乐和Apple Music提取歌单数据
+- **简洁界面**：在简约、清晰的界面中查看提取的歌单信息
+- **导出选项**：将歌单数据下载为CSV或TXT格式
+- **用户友好**：简单的界面和直观的操作流程
 
-## Technologies Used
+## 使用技术
 
-- **Frontend**: HTML, CSS, JavaScript
-- **Backend**: Node.js with Express
-- **Data Extraction**: Axios for API requests and Cheerio for web scraping
+- **前端**：HTML, CSS, JavaScript
+- **后端**：基于Express的Node.js
+- **数据提取**：使用Axios进行API请求，Cheerio进行网页解析
 
-## Setup Instructions
+## 安装说明
 
-1. Clone this repository
-2. Install dependencies:
+1. 克隆此仓库
+2. 安装依赖：
    ```
    npm install
    ```
-3. Start the server:
+3. 启动服务器：
    ```
    npm start
    ```
-4. Open your browser and navigate to `http://localhost:3000`
+4. 打开浏览器，访问 `http://localhost:3000`
 
-## Usage
+## 使用方法
 
-1. Paste a playlist URL from a supported music platform (Apple Music, Netease Music, or QQ Music)
-2. Select the correct platform
-3. Click "Extract Playlist"
-4. View the extracted song information
-5. Export the data in your preferred format (CSV or TXT)
+1. 粘贴支持的音乐平台（网易云音乐、QQ音乐或Apple Music）的歌单URL
+2. 选择正确的平台
+3. 点击"提取歌单"
+4. 查看提取的歌曲信息
+5. 以您喜欢的格式（CSV或TXT）导出数据
 
-## Known Limitations
+## 已知限制
 
-### Netease Music API Restrictions
+### 网易云音乐API限制
 
-The Netease Music API has several limitations:
+网易云音乐API存在以下限制：
 
-1. **Authentication Requirements**: Some playlists require user login to access
-2. **Rate Limiting**: The API may limit requests from the same IP address
-3. **Error Code 20001**: This error indicates that the playlist requires authentication or has access restrictions
-4. **Regional Restrictions**: Some playlists may only be accessible from certain regions
+1. **认证要求**：某些歌单需要用户登录才能访问
+2. **请求限制**：API可能会限制来自同一IP地址的请求
+3. **错误代码20001**：此错误表示歌单需要认证或有访问限制
+4. **地区限制**：某些歌单可能仅在特定地区可访问
 
-For Netease Music playlists that cannot be extracted, the application will display mock data. For better results:
+对于无法提取的网易云音乐歌单，应用将显示模拟数据。为获得更好的结果：
 
-- Try playlists that are publicly accessible
-- Use the URL format `https://music.163.com/#/playlist?id=PLAYLIST_ID`
-- Consider setting up a proxy server using [NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi) for more reliable extraction
+- 尝试公开可访问的歌单
+- 使用URL格式 `https://music.163.com/#/playlist?id=歌单ID`
+- 考虑使用[NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)设置代理服务器以获得更可靠的提取
 
-### Apple Music and QQ Music
+### Apple Music和QQ音乐
 
-These platforms may also have limitations similar to Netease Music. The application attempts to extract data using multiple methods, but success depends on the playlist's accessibility and format.
+这些平台可能也有类似网易云音乐的限制。应用尝试使用多种方法提取数据，但成功与否取决于歌单的可访问性和格式。
 
-## Notes
+## 注意事项
 
-- This application uses web scraping techniques which may break if the target websites change their structure
-- Some platforms may limit or block automated access to their content
-- Always comply with the Terms of Service of the music platforms
+- 本应用使用网页抓取技术，如果目标网站更改其结构，可能会导致功能失效
+- 某些平台可能会限制或阻止自动访问其内容
+- 请始终遵守音乐平台的服务条款
 
-## License
+## 许可证
 
-MIT 
+MIT
