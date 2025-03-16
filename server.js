@@ -2102,3 +2102,11 @@ const startServer = (port) => {
 };
 
 startServer(PORT); 
+
+module.exports = {
+    extractNeteaseMusicPlaylist,
+    extractQQMusicPlaylist,
+    extractAppleMusicPlaylist,
+    extractionProgress,
+    updateProgress
+};
