@@ -1,89 +1,130 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="cn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Playlist Extractor</title>
+    <title>Playlist Extractor | 歌单提取器</title>
+    <meta name="description" content="从Apple Music、网易云音乐和QQ音乐中提取歌单信息，一键导出为CSV或TXT格式">
+    <meta name="theme-color" content="#121212">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Playlist Extractor</h1>
-            <p>Extract song information from your favorite music platforms</p>
-        </header>
-        
-        <main>
-            <section class="input-section">
-                <form id="playlist-form">
-                    <div class="form-group">
-                        <label for="playlist-url">Playlist URL</label>
-                        <input type="url" id="playlist-url" placeholder="Paste your playlist URL here" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Platform</label>
-                        <div class="platform-selector">
-                            <input type="radio" id="apple-music" name="platform" value="apple" checked>
-                            <label for="apple-music">Apple Music</label>
-                            
-                            <input type="radio" id="netease" name="platform" value="netease">
-                            <label for="netease">Netease Music</label>
-                            
-                            <input type="radio" id="qq-music" name="platform" value="qq">
-                            <label for="qq-music">QQ Music</label>
+        <div class="app-container">
+            <header>
+                <h1>歌单提取器</h1>
+                <p>输入链接提取歌单信息，轻松导出歌曲名称、歌手、专辑等详细数据</p>
+                <div class="header-badges">
+                    <span class="badge"><i class="fas fa-bolt"></i> 快速提取</span>
+                    <span class="badge"><i class="fas fa-shield-alt"></i> 无需登录</span>
+                    <span class="badge"><i class="fas fa-file-export"></i> 一键导出</span>
+                </div>
+            </header>
+            
+            <main>
+                <section class="input-section">
+                    <form id="playlist-form">
+                        <div class="form-group">
+                            <label for="playlist-url">
+                                歌单链接
+                            </label>
+                            <input type="url" id="playlist-url" placeholder="粘贴您的歌单URL链接" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                选择平台
+                            </label>
+                            <div class="platform-selector">
+                                <div class="platform-option">
+                                    <input type="radio" id="netease" name="platform" value="netease" class="platform-radio" checked>
+                                    <label for="netease" class="platform-label">
+                                        <i class="fas fa-cloud"></i> 网易云音乐
+                                    </label>
+                                </div>
+                                
+                                <div class="platform-option">
+                                    <input type="radio" id="qq-music" name="platform" value="qq" class="platform-radio">
+                                    <label for="qq-music" class="platform-label">
+                                        <i class="fab fa-qq"></i> QQ音乐
+                                    </label>
+                                </div>
+                                
+                                <div class="platform-option">
+                                    <input type="radio" id="apple-music" name="platform" value="apple" class="platform-radio">
+                                    <label for="apple-music" class="platform-label">
+                                        <i class="fab fa-apple"></i> Apple Music
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit">
+                            提取歌单
+                        </button>
+                    </form>
+                </section>
+                
+                <section class="results-section" id="results-container" style="display: none;">
+                    <div class="results-header">
+                        <h2>歌单信息</h2>
+                        <div class="export-options">
+                            <button id="export-csv">
+                                <i class="fas fa-file-csv"></i> CSV
+                            </button>
+                            <button id="export-txt">
+                                <i class="fas fa-file-alt"></i> TXT
+                            </button>
                         </div>
                     </div>
                     
-                    <button type="submit">Extract Playlist</button>
-                </form>
-            </section>
+                    <div class="playlist-info">
+                        <h3 id="playlist-title">歌单标题</h3>
+                        <p id="playlist-details">0 首歌曲 • 创建者: 未知</p>
+                    </div>
+                    
+                    <div class="songs-container">
+                        <table id="songs-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>歌曲名</th>
+                                    <th>歌手</th>
+                                    <th>专辑</th>
+                                    <th>时长</th>
+                                </tr>
+                            </thead>
+                            <tbody id="songs-list">
+                                <!-- 歌曲将通过JavaScript动态添加 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="loading" class="loading-indicator" style="display: none;">
+                        <div class="spinner"></div>
+                        <p>正在提取歌单信息...</p>
+                    </div>
+                    
+                    <div id="error-message" class="error-message" style="display: none;">
+                        <p><i class="fas fa-exclamation-circle"></i> 无法提取歌单信息。请检查URL并重试。</p>
+                    </div>
+                </section>
+            </main>
             
-            <section class="results-section" id="results-container" style="display: none;">
-                <div class="results-header">
-                    <h2>Playlist Information</h2>
-                    <div class="export-options">
-                        <button id="export-csv">Export CSV</button>
-                        <button id="export-txt">Export TXT</button>
+            <footer>
+                <div class="footer-content">
+                    <p>© 2025 Playlist Extractor</p>
+                    <div class="footer-links">
+                        <a href="#" class="footer-link">关于</a>
+                        <a href="#" class="footer-link">隐私政策</a>
+                        <a href="#" class="footer-link">使用条款</a>
                     </div>
                 </div>
-                
-                <div class="playlist-info">
-                    <h3 id="playlist-title">Playlist Title</h3>
-                    <p id="playlist-details">0 songs • Created by Unknown</p>
-                </div>
-                
-                <div class="songs-container">
-                    <table id="songs-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Title</th>
-                                <th>Artist</th>
-                                <th>Album</th>
-                                <th>Duration</th>
-                            </tr>
-                        </thead>
-                        <tbody id="songs-list">
-                            <!-- Songs will be added here dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div id="loading" class="loading-indicator" style="display: none;">
-                    <div class="spinner"></div>
-                    <p>Extracting playlist information...</p>
-                </div>
-                
-                <div id="error-message" class="error-message" style="display: none;">
-                    <p>Unable to extract playlist information. Please check the URL and try again.</p>
-                </div>
-            </section>
-        </main>
-        
-        <footer>
-            <p>Playlist Extractor &copy; 2023</p>
-        </footer>
+            </footer>
+        </div>
     </div>
     
     <script src="app.js"></script>
