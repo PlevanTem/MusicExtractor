@@ -716,61 +716,6 @@ async function extractAppleMusicPlaylist(url, requestId = null, userToken = null
             console.error('Non-authenticated extraction failed:', error.message);
         }
         
-        // 特殊处理特定歌单ID
-        if (playlistId === 'pl.u-EgUaK573JL') {
-            console.log('检测到特定歌单ID: pl.u-EgUaK573JL，提供预览数据');
-            
-            // 更新进度 - 完成
-            if (requestId) {
-                updateProgress(requestId, {
-                    status: 'completed',
-                    progress: 100,
-                    message: `提供预览数据，包含 25 首歌曲`,
-                    current: 10,
-                    total: 10
-                });
-            }
-            
-            // 返回真实的预览数据
-            return {
-                playlistInfo: {
-                    title: 'Favorite Songs by bufan',
-                    creator: 'bufan',
-                    songCount: 138,
-                    note: '这是真实歌单的数据预览，完整歌单包含138首歌曲。由于Apple Music限制，无法提取完整列表。',
-                    extractionStatus: 'preview_data'
-                },
-                songs: [
-                    // 真实数据
-                    { id: 1, title: 'With Or Without You', artist: 'U2', album: 'The Joshua Tree', duration: '4:56' },
-                    { id: 2, title: 'Shape of My Heart', artist: 'Sting', album: 'Ten Summoner\'s Tales', duration: '4:38' },
-                    { id: 3, title: 'Say Something', artist: 'A Great Big World & Christina Aguilera', album: 'Is There Anybody Out There?', duration: '3:49' },
-                    { id: 4, title: 'Take On Me', artist: 'a-ha', album: 'Hunting High and Low', duration: '3:46' },
-                    { id: 5, title: '风吹麦浪', artist: '李健', album: '似水流年', duration: '4:21' },
-                    { id: 6, title: 'Yesterday Once More', artist: 'The Carpenters', album: 'Now & Then', duration: '3:56' },
-                    { id: 7, title: 'Dancing Queen', artist: 'ABBA', album: 'Arrival', duration: '3:50' },
-                    { id: 8, title: 'Hey Jude', artist: 'The Beatles', album: 'The Beatles 1967-1970', duration: '7:11' },
-                    { id: 9, title: 'I Will Always Love You', artist: 'Whitney Houston', album: 'The Bodyguard', duration: '4:31' },
-                    { id: 10, title: 'Let It Go', artist: 'Idina Menzel', album: 'Frozen', duration: '3:44' },
-                    { id: 11, title: 'Try', artist: 'Pink', album: 'The Truth About Love', duration: '4:09' },
-                    { id: 12, title: 'Someone Like You', artist: 'Adele', album: '21', duration: '4:45' },
-                    { id: 13, title: 'Apologize', artist: 'OneRepublic', album: 'Dreaming Out Loud', duration: '3:28' },
-                    { id: 14, title: 'Just Give Me a Reason', artist: 'Pink & Nate Ruess', album: 'The Truth About Love', duration: '4:03' },
-                    { id: 15, title: '晴天', artist: '周杰伦', album: '叶惠美', duration: '4:29' },
-                    { id: 16, title: '小幸运', artist: '田馥甄', album: '我的少女时代 电影原声带', duration: '4:25' },
-                    { id: 17, title: 'Love Story', artist: 'Taylor Swift', album: 'Fearless', duration: '3:56' },
-                    { id: 18, title: '龙卷风', artist: '周杰伦', album: 'Jay', duration: '4:22' },
-                    { id: 19, title: 'My Heart Will Go On', artist: 'Céline Dion', album: 'Let\'s Talk About Love', duration: '4:40' },
-                    { id: 20, title: 'Hotel California', artist: 'Eagles', album: 'Hotel California', duration: '6:30' },
-                    { id: 21, title: 'We Are The Champions', artist: 'Queen', album: 'News of the World', duration: '3:00' },
-                    { id: 22, title: 'Bohemian Rhapsody', artist: 'Queen', album: 'A Night at the Opera', duration: '5:55' },
-                    { id: 23, title: 'November Rain', artist: 'Guns N\' Roses', album: 'Use Your Illusion I', duration: '8:57' },
-                    { id: 24, title: 'Sweet Child O\' Mine', artist: 'Guns N\' Roses', album: 'Appetite for Destruction', duration: '5:56' },
-                    { id: 25, title: 'Imagine', artist: 'John Lennon', album: 'Imagine', duration: '3:04' }
-                ]
-            };
-        }
-        
         // 如果所有方法都失败，返回模拟数据
         console.log('All extraction methods failed for Apple Music, returning mock data');
         
